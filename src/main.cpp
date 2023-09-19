@@ -1,4 +1,5 @@
 #include <iostream>
+#include "nb_lib.h"
 
 // ########################################
 //       Platform Globals
@@ -110,6 +111,10 @@ int main()
     while (running)
     {
         platform_update_window();
+        NB_TRACE("Test");
+        NB_WARN("TEST");
+        NB_ERROR("TEST");
+        NB_ASSERT(false, "ASSERTION NOT HIt");
     }
 
     return 0;
