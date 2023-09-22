@@ -114,7 +114,7 @@ int main()
         NB_TRACE("Test");
         NB_WARN("TEST");
         NB_ERROR("TEST");
-        NB_ASSERT(false, "ASSERTION NOT HIt");
+        NB_ASSERT(false, "ASSERTION HIt");
     }
 
     return 0;

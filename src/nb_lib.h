@@ -2,6 +2,15 @@
 
 #include <stdio.h>
 
+// This is to get malloc
+#include <stdlib.h>
+
+// This is to get memset
+#include <string.h>
+
+// Used to get the edit timestamp of files
+#include <sys/stat.h>
+
 // ########################################
 //       Defines
 // ########################################
@@ -84,3 +93,192 @@ void _log(char *prefix, char *msg, TextColor textColor, Args... args)
             NB_ERROR("Assertion hit");    \
         }                                 \
     };
+
+// ########################################
+//              Bump Allocator
+// ########################################
+
+struct BumpAllocator
+{
+    size_t capacity;
+    size_t used;
+    char *memory;
+};
+
+BumpAllocator make_bump_allocator(size_t size)
+{
+    BumpAllocator ba = {};
+    ba.memory = (char *)malloc(size);
+    if (ba.memory)
+    {
+        ba.capacity = size;
+        memset(ba.memory, 0, size); // sets the memory to 0
+    }
+    else
+    {
+        NB_ASSERT(false, "Failed to allocate memory");
+    }
+
+    return ba;
+}
+
+char *bump_alloc(BumpAllocator *bumpAllocator, size_t size)
+{
+    char *result = nullptr;
+
+    size_t allignedSize = (size + 7) & ~7;
+    if (bumpAllocator->used + allignedSize <= bumpAllocator->capacity)
+    {
+        result = bumpAllocator->memory + bumpAllocator->used;
+        bumpAllocator->used += allignedSize;
+    }
+    else
+    {
+        NB_ASSERT(false, "BumpAllocator is full");
+    }
+
+    return result;
+}
+
+// ########################################
+//              File I/O
+// ########################################
+
+long long get_timestamp(char *file)
+{
+    struct stat file_stat = {};
+    stat(file, &file_stat);
+    return file_stat.st_mtime;
+}
+
+bool file_exists(char *filePath)
+{
+    NB_ASSERT(filePath, "No filePath supplied!");
+
+    auto file = fopen(filePath, "rb");
+    if (!file)
+    {
+        return false;
+    }
+    fclose(file);
+
+    return true;
+}
+
+long get_file_size(char *filePath)
+{
+    NB_ASSERT(filePath, "No filePath supplied!");
+
+    long fileSize = 0;
+    auto file = fopen(filePath, "rb");
+    if (!file)
+    {
+        NB_ERROR("Failed opening File: %s", filePath);
+        return 0;
+    }
+
+    fseek(file, 0, SEEK_END);
+    fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    fclose(file);
+
+    return fileSize;
+}
+
+/*
+ * Reads a file into a supplied buffer. We manage our own
+ * memory and therefore want more control over where it
+ * is allocated
+ */
+char *read_file(char *filePath, int *fileSize, char *buffer)
+{
+    NB_ASSERT(filePath, "No filePath supplied!");
+    NB_ASSERT(fileSize, "No fileSize supplied!");
+    NB_ASSERT(buffer, "No buffer supplied!");
+
+    *fileSize = 0;
+    auto file = fopen(filePath, "rb");
+    if (!file)
+    {
+        NB_ERROR("Failed opening File: %s", filePath);
+        return nullptr;
+    }
+
+    fseek(file, 0, SEEK_END);
+    *fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    memset(buffer, 0, *fileSize + 1);
+    fread(buffer, sizeof(char), *fileSize, file);
+
+    fclose(file);
+
+    return buffer;
+}
+
+char *read_file(char *filePath, int *fileSize, BumpAllocator *bumpAllocator)
+{
+    char *file = nullptr;
+    long fileSize2 = get_file_size(filePath);
+
+    if (fileSize2)
+    {
+        char *buffer = bump_alloc(bumpAllocator, fileSize2 + 1);
+
+        file = read_file(filePath, fileSize, buffer);
+    }
+
+    return file;
+}
+
+void write_file(char *filePath, char *buffer, int size)
+{
+    NB_ASSERT(filePath, "No filePath supplied!");
+    NB_ASSERT(buffer, "No buffer supplied!");
+    auto file = fopen(filePath, "wb");
+    if (!file)
+    {
+        NB_ERROR("Failed opening File: %s", filePath);
+        return;
+    }
+
+    fwrite(buffer, sizeof(char), size, file);
+    fclose(file);
+}
+
+bool copy_file(char *fileName, char *outputName, char *buffer)
+{
+    int fileSize = 0;
+    char *data = read_file(fileName, &fileSize, buffer);
+
+    auto outputFile = fopen(outputName, "wb");
+    if (!outputFile)
+    {
+        NB_ERROR("Failed opening File: %s", outputName);
+        return false;
+    }
+
+    int result = fwrite(data, sizeof(char), fileSize, outputFile);
+    if (!result)
+    {
+        NB_ERROR("Failed opening File: %s", outputName);
+        return false;
+    }
+
+    fclose(outputFile);
+
+    return true;
+}
+
+bool copy_file(char *fileName, char *outputName, BumpAllocator *bumpAllocator)
+{
+    char *file = 0;
+    long fileSize2 = get_file_size(fileName);
+
+    if (fileSize2)
+    {
+        char *buffer = bump_alloc(bumpAllocator, fileSize2 + 1);
+
+        return copy_file(fileName, outputName, buffer);
+    }
+}
