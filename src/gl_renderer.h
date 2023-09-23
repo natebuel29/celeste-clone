@@ -21,7 +21,7 @@ static PFNGLUNIFORM1IPROC glUniform1i_ptr;
 static PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv_ptr;
 static PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor_ptr;
 static PFNGLACTIVETEXTUREPROC glActiveTexture_ptr;
-static PFNGLBUFFERSUBDATAPROC glBufferSubData_ptr;
+static PFNGLBUFFERSUBDATAPROC glBufferSubData_ptr; 
 static PFNGLDRAWARRAYSINSTANCEDPROC glDrawArraysInstanced_ptr;
 static PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer_ptr;
 static PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus_ptr;
