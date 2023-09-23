@@ -8,7 +8,7 @@
                 "${workspaceFolder}/third_party"
             ],
             "defines": [
-                "DEBUG",
+                "DEBUG"
             ],
             "windowsSdkVersion": "10.0.22621.0",
             "compilerPath": "cl.exe",
