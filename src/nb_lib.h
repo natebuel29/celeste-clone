@@ -281,4 +281,6 @@ bool copy_file(char *fileName, char *outputName, BumpAllocator *bumpAllocator)
 
         return copy_file(fileName, outputName, buffer);
     }
+
+    return false;
 }
