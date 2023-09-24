@@ -1,7 +1,7 @@
 #pragma once
 
-#include "nb_lib.h"
 #include "assets.h"
+#include "nb_lib.h"
 
 // #############################################################################
 //                           Renderer Constants
@@ -14,10 +14,10 @@ constexpr int MAX_TRANSFORMS = 1000;
 
 struct Transform
 {
-    IVec2 atlasOffset;
-    IVec2 spriteSize;
     Vec2 pos;
     Vec2 size;
+    IVec2 atlasOffset;
+    IVec2 spriteSize;
 };
 
 struct RenderData
@@ -37,12 +37,10 @@ static RenderData renderData;
 void draw_sprite(SpriteID spriteID, Vec2 pos, Vec2 size)
 {
     Sprite sprite = get_sprite(spriteID);
-
     Transform transform = {};
-    transform.atlasOffset = sprite.atlasOffset;
-    transform.spriteSize = sprite.spriteSize;
     transform.pos = pos;
     transform.size = size;
-
+    transform.atlasOffset = sprite.atlasOffset;
+    transform.spriteSize = sprite.spriteSize;
     renderData.transforms[renderData.transformCount++] = transform;
 }

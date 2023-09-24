@@ -1,26 +1,24 @@
 #version 430 core
 
-//structs
-
-struct Transform
+// Structs
+struct Transform 
 {
-    vec2 pos;
-    vec2 size;
-    ivec2 atlasOffset;
-    ivec2 spriteSize;
+  vec2 pos;
+  vec2 size;
+  ivec2 atlasOffset; 
+  ivec2 spriteSize;
 };
 
-//input
-
-layout(std430, binding = 0) buffer TransformSBO
+// Input
+layout (std430, binding = 0) buffer TransformSBO
 {
   Transform transforms[];
 };
 
 uniform vec2 screenSize;
 
-//output
-layout(location = 0) out vec2 textureCoordsOut;
+// Output
+layout (location = 0) out vec2 textureCoordsOut;
 
 void main()
 {
@@ -42,22 +40,22 @@ void main()
     transform.pos + transform.size                        // Bottom Right
   };
 
-  float left =transform.atlasOffset.x;
+  float left = transform.atlasOffset.x;
   float top = transform.atlasOffset.y;
   float right = transform.atlasOffset.x + transform.spriteSize.x;
   float bottom = transform.atlasOffset.y + transform.spriteSize.y;
 
-  vec2 textureCoords[6] = {
+  vec2 textureCoords[6] = 
+  {
     vec2(left, top),
     vec2(left, bottom),
     vec2(right, top),
     vec2(right, top),
     vec2(left, bottom),
     vec2(right, bottom),
-
   };
-
-    // Normalize Position
+ 
+  // Normalize Position
   {
     vec2 vertexPos = vertices[gl_VertexID];
     vertexPos.y = -vertexPos.y + screenSize.y;
