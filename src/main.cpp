@@ -47,6 +47,13 @@ int main()
         return -1;
     }
 
+    gameState = (GameState *)bump_alloc(&persistentStorage, sizeof(GameState));
+    if (!gameState)
+    {
+        NB_ERROR("Failed to allocate GameState");
+        return -1;
+    }
+
     platform_create_window(1200, 720, "NB Motor");
     input->screenSizeX = 1200;
     input->screenSizeY = 720;
@@ -55,7 +62,7 @@ int main()
     {
         reload_game_dll(&transientStorage);
         platform_update_window();
-        update_game(renderData, input);
+        update_game(gameState, renderData, input);
         gl_render();
 
         platform_swap_buffers();
@@ -65,9 +72,9 @@ int main()
     return 0;
 }
 
-void update_game(RenderData *renderDataIn, Input *inputIn)
+void update_game(GameState *gameStateIn, RenderData *renderDataIn, Input *inputIn)
 {
-    update_game_ptr(renderDataIn, inputIn);
+    update_game_ptr(gameStateIn, renderDataIn, inputIn);
 }
 
 void reload_game_dll(BumpAllocator *transientStorage)

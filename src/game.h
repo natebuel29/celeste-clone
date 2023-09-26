@@ -6,22 +6,24 @@
 #include "assets.h"
 
 // #############################################################################
-//                           Game Globals
-// #############################################################################
-constexpr int tset = 5;
-
-// #############################################################################
 //                           Game Structs
 // #############################################################################
 struct GameState
 {
+    bool initialized = false;
     IVec2 playerPos;
 };
+static GameState *gameState;
+
+// #############################################################################
+//                           Game Globals
+// #############################################################################
+constexpr int tset = 5;
 
 // #############################################################################
 //                           Game Functions (Exposed)
 // #############################################################################
 extern "C"
 {
-    EXPORT_FN void update_game(RenderData *renderDataIn, Input *inputIn);
+    EXPORT_FN void update_game(GameState *gameStateIn, RenderData *renderDataIn, Input *inputIn);
 }
