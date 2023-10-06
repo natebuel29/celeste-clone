@@ -9,6 +9,8 @@
 #define GL_GLEXT_PROTOTYPES
 #include "glcorearb.h"
 
+static KeyCodeID KeyCodeLookupTable[KEY_COUNT];
+
 #include "platform.h"
 #ifdef _WIN32
 #include "win32_platform.cpp"
@@ -54,9 +56,9 @@ int main()
         return -1;
     }
 
-    platform_create_window(1200, 720, "NB Motor");
-    input->screenSizeX = 1200;
-    input->screenSizeY = 720;
+    platform_create_window(1280, 640, "NB Motor");
+    platform_fill_keycode_lookup_table();
+
     gl_init(&transientStorage);
     while (running)
     {
