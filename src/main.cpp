@@ -56,7 +56,7 @@ int main()
         return -1;
     }
 
-    platform_create_window(1280, 640, "NB Motor");
+    platform_create_window(1280, 720, "NB Motor");
     platform_fill_keycode_lookup_table();
 
     gl_init(&transientStorage);
