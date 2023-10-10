@@ -11,6 +11,9 @@
 // Used to get the edit timestamp of files
 #include <sys/stat.h>
 
+// Obvious right?
+#include <math.h>
+
 // ########################################
 //       Defines
 // ########################################
@@ -339,6 +342,16 @@ bool copy_file(char *fileName, char *outputName, BumpAllocator *bumpAllocator)
 //             Math stuff
 // ########################################
 
+int sign(int x)
+{
+    return (x >= 0) ? 1 : -1;
+}
+
+float sign(float x)
+{
+    return (x >= 0.0f) ? 1.0f : -1.0f;
+}
+
 long long max(long long a, long long b)
 {
     if (a > b)
@@ -349,6 +362,40 @@ long long max(long long a, long long b)
     {
         return b;
     }
+}
+
+float max(float a, float b)
+{
+    if (a > b)
+    {
+        return a;
+    }
+
+    return b;
+}
+
+float min(float a, float b)
+{
+    if (a < b)
+    {
+        return a;
+    }
+
+    return b;
+}
+
+float approach(float current, float target, float increase)
+{
+    if (current < target)
+    {
+        return min(current + increase, target);
+    }
+    return max(current - increase, target);
+}
+
+float lerp(float a, float b, float t)
+{
+    return a + (b - a) * t;
 }
 
 struct Vec2
@@ -381,6 +428,22 @@ struct IVec2
 Vec2 vec_2(IVec2 v)
 {
     return Vec2{(float)v.x, (float)v.y};
+}
+
+Vec2 lerp(Vec2 a, Vec2 b, float t)
+{
+    Vec2 result;
+    result.x = lerp(a.x, b.x, t);
+    result.y = lerp(a.y, b.y, t);
+    return result;
+}
+
+IVec2 lerp(IVec2 a, IVec2 b, float t)
+{
+    IVec2 result;
+    result.x = (int)floorf(lerp((float)a.x, (float)b.x, t));
+    result.y = (int)floorf(lerp((float)a.y, (float)b.y, t));
+    return result;
 }
 
 struct Vec4
@@ -458,4 +521,40 @@ Mat4 orthographic_projection(float left, float right, float top, float bottom)
     result[3][3] = 1.0f;
 
     return result;
+}
+
+struct Rect
+{
+    Vec2 pos;
+    Vec2 size;
+};
+
+struct IRect
+{
+    IVec2 pos;
+    IVec2 size;
+};
+
+bool point_in_rect(Vec2 point, Rect rect)
+{
+    return (point.x >= rect.pos.x &&
+            point.x <= rect.pos.x + rect.size.x &&
+            point.y >= rect.pos.y &&
+            point.y <= rect.pos.y + rect.size.y);
+}
+
+bool point_in_rect(Vec2 point, IRect rect)
+{
+    return (point.x >= rect.pos.x &&
+            point.x <= rect.pos.x + rect.size.x &&
+            point.y >= rect.pos.y &&
+            point.y <= rect.pos.y + rect.size.y);
+}
+
+bool rect_collision(IRect a, IRect b)
+{
+    return a.pos.x < b.pos.x + b.size.x && // Collision on Left of a and right of b
+           a.pos.x + a.size.x > b.pos.x && // Collision on Right of a and left of b
+           a.pos.y < b.pos.y + b.size.y && // Collision on Bottom of a and Top of b
+           a.pos.y + a.size.y > b.pos.y;   // Collision on Top of a and Bottom of b
 }
