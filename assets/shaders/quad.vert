@@ -1,14 +1,3 @@
-#version 430 core
-
-// Structs
-struct Transform 
-{
-  vec2 pos;
-  vec2 size;
-  ivec2 atlasOffset; 
-  ivec2 spriteSize;
-};
-
 // Input
 layout (std430, binding = 0) buffer TransformSBO
 {
@@ -41,10 +30,24 @@ void main()
     transform.pos + transform.size                        // Bottom Right
   };
 
-  float left = transform.atlasOffset.x;
-  float top = transform.atlasOffset.y;
-  float right = transform.atlasOffset.x + transform.spriteSize.x;
-  float bottom = transform.atlasOffset.y + transform.spriteSize.y;
+  int left = transform.atlasOffset.x;
+  int top = transform.atlasOffset.y;
+  int right = transform.atlasOffset.x + transform.spriteSize.x;
+  int bottom = transform.atlasOffset.y + transform.spriteSize.y;
+
+  if(bool(transform.renderOptions & RENDERING_OPTION_FLIP_X))
+  {
+    int tmp = left;
+    left = right;
+    right = tmp;
+  }
+
+  if(bool(transform.renderOptions & RENDERING_OPTION_FLIP_Y))
+  {
+    int tmp = top;
+    top = bottom;
+    bottom = tmp;
+  }
 
   vec2 textureCoords[6] = 
   {

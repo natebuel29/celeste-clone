@@ -4,6 +4,7 @@
 #include "input.h"
 #include "render_interface.h"
 #include "assets.h"
+#include "sound.h"
 
 // #############################################################################
 //                           Game Globals
@@ -45,11 +46,36 @@ struct Tile
     bool isVisible;
 };
 
+enum PlayerAnimState
+{
+    PLAYER_ANIM_IDLE,
+    PLAYER_ANIM_RUN,
+    PLAYER_ANIM_JUMP,
+
+    PLAYER_ANIM_COUNT
+};
+
 struct Player
 {
     IVec2 pos;
     IVec2 prevPos;
     Vec2 speed;
+    Vec2 solidSpeed;
+    int renderOptions;
+    float runAnimTime;
+    PlayerAnimState animationState;
+    SpriteID animationSprites[PLAYER_ANIM_COUNT];
+};
+
+struct Solid
+{
+    SpriteID spriteID;
+    IVec2 pos;
+    IVec2 prevPos;
+    Vec2 remainder;
+    Vec2 speed;
+    int keyframeIdx;
+    Array<IVec2, 2> keyframes;
 };
 
 struct GameState
@@ -57,6 +83,7 @@ struct GameState
     float updateTimer;
     bool initialized = false;
     Player player;
+    Array<Solid, 20> solids;
     Array<IVec2, 21> tileCoords;
     Tile worldGrid[WORLD_GRID.x][WORLD_GRID.y];
     KeyMapping keyMappings[GAME_INPUT_COUNT];
@@ -68,5 +95,5 @@ static GameState *gameState;
 // #############################################################################
 extern "C"
 {
-    EXPORT_FN void update_game(GameState *gameStateIn, RenderData *renderDataIn, Input *inputIn, float dt);
+    EXPORT_FN void update_game(GameState *gameStateIn, RenderData *renderDataIn, Input *inputIn, SoundState *soundStateIn, float dt);
 }

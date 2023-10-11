@@ -15,6 +15,14 @@
 #include <math.h>
 
 // ########################################
+//       Constants
+// ########################################
+
+// WAV Files
+constexpr int NUM_CHANNELS = 2;
+constexpr int SAMPLE_RATE = 44100;
+
+// ########################################
 //       Defines
 // ########################################
 
@@ -27,6 +35,8 @@
 #elif __APPLE__
 #define DEBUG_BREAK() __buildin_trap();
 #endif
+
+#define ArraySize(x) (sizeof((x)) / sizeof((x)[0]))
 
 #define b8 char
 #define BIT(x) 1 << (x)
@@ -423,6 +433,25 @@ struct IVec2
     {
         return {x - other.x, y - other.y};
     }
+
+    IVec2 &operator-=(int value)
+    {
+        x -= value;
+        y -= value;
+        return *this;
+    }
+
+    IVec2 &operator+=(int value)
+    {
+        x += value;
+        y += value;
+        return *this;
+    }
+
+    IVec2 operator/(int scalar)
+    {
+        return {x / scalar, y / scalar};
+    }
 };
 
 Vec2 vec_2(IVec2 v)
@@ -557,4 +586,66 @@ bool rect_collision(IRect a, IRect b)
            a.pos.x + a.size.x > b.pos.x && // Collision on Right of a and left of b
            a.pos.y < b.pos.y + b.size.y && // Collision on Bottom of a and Top of b
            a.pos.y + a.size.y > b.pos.y;   // Collision on Top of a and Bottom of b
+}
+
+// #############################################################################
+//                           WAV File stuff
+// #############################################################################
+// Wave Files are seperated into chunks,
+// struct chunk
+// {
+//   unsigned int id;
+//   unsigned int size; // In bytes
+//   ...
+// }
+// we are ASSUMING!!!! That we have a "Riff Chunk"
+// followed by a "Format Chunk" followed by a
+// "Data Chunk", this CAN! be wrong ofcourse
+struct WAVHeader
+{
+    // Riff Chunk
+    unsigned int riffChunkId;
+    unsigned int riffChunkSize;
+    unsigned int format;
+
+    // Format Chunk
+    unsigned int formatChunkId;
+    unsigned int formatChunkSize;
+    unsigned short audioFormat;
+    unsigned short numChannels;
+    unsigned int sampleRate;
+    unsigned int byteRate;
+    unsigned short blockAlign;
+    unsigned short bitsPerSample;
+
+    // Data Chunk
+    unsigned char dataChunkId[4];
+    unsigned int dataChunkSize;
+};
+
+struct WAVFile
+{
+    WAVHeader header;
+    char dataBegin;
+};
+
+WAVFile *load_wav(char *path, BumpAllocator *bumpAllocator)
+{
+    int fileSize = 0;
+    WAVFile *wavFile = (WAVFile *)read_file(path, &fileSize, bumpAllocator);
+    if (!wavFile)
+    {
+        NB_ASSERT(0, "Failed to load Wave File: %s", path);
+        return nullptr;
+    }
+
+    NB_ASSERT(wavFile->header.numChannels == NUM_CHANNELS,
+              "We only support 2 channels for now!");
+    NB_ASSERT(wavFile->header.sampleRate == SAMPLE_RATE,
+              "We only support 44100 sample rate for now!");
+
+    NB_ASSERT(memcmp(&wavFile->header.dataChunkId, "data", 4) == 0,
+              "WAV File not in propper format");
+
+    return wavFile;
 }

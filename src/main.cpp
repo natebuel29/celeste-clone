@@ -3,6 +3,8 @@
 
 #include "game.h"
 
+#include "sound.h"
+
 #include "platform.h"
 
 #define APIENTRY
@@ -38,7 +40,7 @@ int main()
     get_delta_time();
 
     BumpAllocator transientStorage = make_bump_allocator(MB(50));
-    BumpAllocator persistentStorage = make_bump_allocator(MB(50));
+    BumpAllocator persistentStorage = make_bump_allocator(MB(256));
 
     input = (Input *)bump_alloc(&persistentStorage, sizeof(Input));
     if (!input)
@@ -61,9 +63,28 @@ int main()
         return -1;
     }
 
+    soundState = (SoundState *)bump_alloc(&persistentStorage, sizeof(SoundState));
+    if (!soundState)
+    {
+        NB_ERROR("Failed to allocate SoundState");
+        return -1;
+    }
+    soundState->transientStorage = &transientStorage;
+    soundState->allocatedsoundsBuffer = bump_alloc(&persistentStorage, SOUNDS_BUFFER_SIZE);
+    if (!soundState->allocatedsoundsBuffer)
+    {
+        NB_ERROR("Failed to allocated Sounds Buffer");
+        return -1;
+    }
+
     platform_create_window(1280, 720, "NB Motor");
     platform_fill_keycode_lookup_table();
     platform_set_vsync(true);
+    if (!platform_init_audio())
+    {
+        NB_ERROR("Failed to initialize Audio");
+        return -1;
+    }
 
     gl_init(&transientStorage);
     while (running)
@@ -74,8 +95,9 @@ int main()
 
         // update
         platform_update_window();
-        update_game(gameState, renderData, input, dt);
+        update_game(gameState, renderData, input, soundState, dt);
         gl_render(&transientStorage);
+        platform_update_audio(dt);
 
         platform_swap_buffers();
         transientStorage.used = 0;
@@ -84,9 +106,9 @@ int main()
     return 0;
 }
 
-void update_game(GameState *gameStateIn, RenderData *renderDataIn, Input *inputIn, float dt)
+void update_game(GameState *gameStateIn, RenderData *renderDataIn, Input *inputIn, SoundState *soundStateIn, float dt)
 {
-    update_game_ptr(gameStateIn, renderDataIn, inputIn, dt);
+    update_game_ptr(gameStateIn, renderDataIn, inputIn, soundStateIn, dt);
 }
 
 double get_delta_time()

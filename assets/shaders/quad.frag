@@ -1,5 +1,3 @@
-#version 430 core
-
 // Input
 layout (location = 0) in vec2 textureCoordsIn;
 
@@ -19,5 +17,5 @@ void main()
   }
 
   // White Quad
-  fragColor = textureColor;
+  fragColor = textureColor * vec4(1,0,0);
 }
