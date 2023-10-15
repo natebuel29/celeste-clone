@@ -362,6 +362,16 @@ float sign(float x)
     return (x >= 0.0f) ? 1.0f : -1.0f;
 }
 
+int min(int a, int b)
+{
+    return (a < b) ? a : b;
+}
+
+int max(int a, int b)
+{
+    return (a > b) ? a : b;
+}
+
 long long max(long long a, long long b)
 {
     if (a > b)
@@ -421,6 +431,11 @@ struct Vec2
     Vec2 operator-(Vec2 other)
     {
         return {x - other.x, y - other.y};
+    }
+
+    Vec2 operator*(float scalar)
+    {
+        return {x * scalar, y * scalar};
     }
 };
 
@@ -500,6 +515,11 @@ struct Vec4
     float &operator[](int idx)
     {
         return values[idx];
+    }
+
+    bool operator==(Vec4 other)
+    {
+        return x == other.x && y == other.y && z == other.z && w == other.w;
     }
 };
 
@@ -649,3 +669,13 @@ WAVFile *load_wav(char *path, BumpAllocator *bumpAllocator)
 
     return wavFile;
 }
+
+// #######################################################################
+//                           Normal Colors
+// #######################################################################
+constexpr Vec4 COLOR_WHITE = {1.0f, 1.0f, 1.0f, 1.0f};
+constexpr Vec4 COLOR_RED = {1.0f, 0.0f, 0.0f, 1.0f};
+constexpr Vec4 COLOR_GREEN = {0.0f, 1.0f, 0.0f, 1.0f};
+constexpr Vec4 COLOR_BLUE = {0.0f, 0.0f, 1.0f, 1.0f};
+constexpr Vec4 COLOR_YELLOW = {1.0f, 1.0f, 0.0f, 1.0f};
+constexpr Vec4 COLOR_BLACK = {0.0f, 0.0f, 0.0f, 1.0};

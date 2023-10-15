@@ -600,9 +600,14 @@ EXPORT_FN void update_game(GameState *gameStateIn, RenderData *renderDataIn, Inp
 
     if (!gameState->initialized)
     {
+        // play_sound("First Steps", SOUND_OPTION_LOOP);
         renderData->gameCamera.dimensions = {WORLD_WIDTH, WORLD_HEIGHT};
-        gameState->initialized = true;
-        play_sound("First Steps", SOUND_OPTION_LOOP);
+        renderData->gameCamera.position.x = 160;
+        renderData->gameCamera.position.y = -90;
+
+        renderData->uiCamera.dimensions = {WORLD_WIDTH, WORLD_HEIGHT};
+        renderData->uiCamera.position.x = 160;
+        renderData->uiCamera.position.y = -90;
 
         // Player
         {
@@ -643,9 +648,6 @@ EXPORT_FN void update_game(GameState *gameStateIn, RenderData *renderDataIn, Inp
             gameState->keyMappings[JUMP].keys.add(KEY_SPACE);
         }
 
-        renderData->gameCamera.position.x = 160;
-        renderData->gameCamera.position.y = -90;
-
         // Solids
         {
             Solid solid = {};
@@ -664,6 +666,8 @@ EXPORT_FN void update_game(GameState *gameStateIn, RenderData *renderDataIn, Inp
             solid.speed.y = 50.0f;
             gameState->solids.add(solid);
         }
+
+        gameState->initialized = true;
     }
 
     // Fixed Update Loop
@@ -691,6 +695,13 @@ EXPORT_FN void update_game(GameState *gameStateIn, RenderData *renderDataIn, Inp
     }
 
     float interpolatedDT = (float)(gameState->updateTimer / UPDATE_DELAY);
+    Material uiMaterial = {};
+    uiMaterial.color = COLOR_BLUE;
+
+    TextData textData = {};
+    textData.material = uiMaterial;
+    textData.fontSize = 2.0f;
+    draw_ui_text("Subscribe\nLike\nAnd Comment!", {0, 20}, textData);
 
     // Draw Solids
     {

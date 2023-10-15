@@ -11,3 +11,4 @@ build
 .vs
 settings.json
 .clangd
+!freetype.lib

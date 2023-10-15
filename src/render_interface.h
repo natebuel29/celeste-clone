@@ -7,14 +7,12 @@
 // #############################################################################
 //                           Renderer Constants
 // #############################################################################
-
 int RENDER_OPTION_FLIP_X = BIT(0);
 int RENDER_OPTION_FLIP_Y = BIT(1);
 
 // #############################################################################
 //                           Renderer Structs
 // #############################################################################
-
 struct OrthographicCamera2D
 {
     float zoom = 1.0f;
@@ -24,15 +22,37 @@ struct OrthographicCamera2D
 
 struct DrawData
 {
+    Material material = {};
     int animationIdx;
     int renderOptions;
+};
+
+struct TextData
+{
+    Material material = {};
+    float fontSize = 1.0f;
+    int renderOptions;
+};
+
+struct Glyph
+{
+    Vec2 offset;
+    Vec2 advance;
+    IVec2 textureCoords;
+    IVec2 size;
 };
 
 struct RenderData
 {
     OrthographicCamera2D gameCamera;
     OrthographicCamera2D uiCamera;
+
+    int fontHeight;
+    Glyph glyphs[127];
+
+    Array<Material, 1000> materials;
     Array<Transform, 1000> transforms;
+    Array<Transform, 1000> uiTransforms;
 };
 
 // #############################################################################
@@ -82,6 +102,25 @@ int animate(float *time, int frameCount, float duration = 1.0f)
     return animationIdx;
 }
 
+int get_material_idx(Material material = {})
+{
+    // Convert from SRGB to linear color space, to be used in the shader, poggies
+    material.color.r = powf(material.color.r, 2.2f);
+    material.color.g = powf(material.color.g, 2.2f);
+    material.color.b = powf(material.color.b, 2.2f);
+    material.color.a = powf(material.color.a, 2.2f);
+
+    for (int materialIdx = 0; materialIdx < renderData->materials.count; materialIdx++)
+    {
+        if (renderData->materials[materialIdx] == material)
+        {
+            return materialIdx;
+        }
+    }
+
+    return renderData->materials.add(material);
+}
+
 // #############################################################################
 //                           Renderer Functions
 // #############################################################################
@@ -96,7 +135,7 @@ void draw_quad(Vec2 pos, Vec2 size)
     transform.pos = pos - size / 2.0f;
     transform.size = size;
     transform.atlasOffset = {0, 0};
-    transform.size = {1, 1}; // Indexing into white
+    transform.spriteSize = {1, 1}; // Indexing into white
 
     renderData->transforms.add(transform);
 }
@@ -104,11 +143,12 @@ void draw_quad(Vec2 pos, Vec2 size)
 void draw_sprite(SpriteID spriteID, Vec2 pos, DrawData drawData = {})
 {
     Sprite sprite = get_sprite(spriteID);
-
     // For Anmations, this is a multiple of the sprites size,
     // based on the animationIdx
     sprite.atlasOffset.x += drawData.animationIdx * sprite.size.x;
+
     Transform transform = {};
+    transform.materialIdx = get_material_idx(drawData.material);
     transform.pos = pos - vec_2(sprite.size) / 2.0f;
     transform.size = vec_2(sprite.size);
     transform.atlasOffset = sprite.atlasOffset;
@@ -121,4 +161,49 @@ void draw_sprite(SpriteID spriteID, Vec2 pos, DrawData drawData = {})
 void draw_sprite(SpriteID spriteID, IVec2 pos, DrawData drawData = {})
 {
     draw_sprite(spriteID, vec_2(pos), drawData);
+}
+
+// #############################################################################
+//                     Render Interface UI Font Rendering
+// #############################################################################
+void draw_ui_text(char *text, Vec2 pos, TextData textData = {})
+{
+    NB_ASSERT(text, "No Text Supplied!");
+    if (!text)
+    {
+        return;
+    }
+
+    Vec2 origin = pos;
+    while (char c = *(text++))
+    {
+        if (c == '\n')
+        {
+            pos.y += renderData->fontHeight * textData.fontSize;
+            pos.x = origin.x;
+            continue;
+        }
+
+        Glyph glyph = renderData->glyphs[c];
+        Transform transform = {};
+        transform.materialIdx = get_material_idx(textData.material);
+        transform.pos.x = pos.x + glyph.offset.x * textData.fontSize;
+        transform.pos.y = pos.y - glyph.offset.y * textData.fontSize;
+        transform.atlasOffset = glyph.textureCoords;
+        transform.spriteSize = glyph.size;
+        transform.size = vec_2(glyph.size) * textData.fontSize;
+        transform.renderOptions = textData.renderOptions | RENDERING_OPTION_FONT;
+
+        renderData->uiTransforms.add(transform);
+
+        // Advance the Glyph
+        pos.x += glyph.advance.x * textData.fontSize;
+    }
+}
+
+template <typename... Args>
+void draw_format_ui_text(char *format, Vec2 pos, Args... args)
+{
+    char *text = format_text(format, args...);
+    draw_ui_text(text, pos);
 }
